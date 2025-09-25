@@ -1,0 +1,19 @@
+{
+  "name": "unclanked",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node .",
+    "test": "node --test"
+  },
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "he": "^1.2.0",
+    "mustache": "^4.2.0",
+    "ollama": "^0.5.16"
+  }
+}
