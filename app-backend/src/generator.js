@@ -2,7 +2,7 @@ import Mustache from 'mustache';
 import he from 'he';
 import { Ollama } from 'ollama';
 
-const OLLAMA_HOST = process.env.API_PORT || 'http://192.168.1.22:11434';
+const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://192.168.1.22:11434';
 const ollama = new Ollama({ host: OLLAMA_HOST }); // quiet
 
 // for html pages, include only og meta tags in the head and a detailed body.
