@@ -1,0 +1,23 @@
+name: "unclanked"
+
+services:
+  nginx:
+    image: nginx:1.28.0
+    hostname: tmux.io
+    ports:
+      - "26060:443"
+    volumes:
+      - ./app-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./app-proxy/ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    depends_on: [unclanked]
+  unclanked:
+    image: unclanked:latest
+    hostname: tmux.io
+    environment:
+      - API_PORT=3000
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    build:
+      context: .
+      dockerfile: app-backend/Dockerfile.backend
+    restart: unless-stopped

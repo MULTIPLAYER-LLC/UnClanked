@@ -1,0 +1,13 @@
+FROM node:22-alpine
+
+USER root
+
+WORKDIR /srv/app-backend
+
+COPY app-backend/package.json app-backend/package-lock.json /srv/app-backend/
+
+RUN npm install
+
+COPY app-backend/src/ /srv/app-backend/src/
+
+CMD ["npm", "start"]
