@@ -17,6 +17,8 @@ services:
     environment:
       - API_PORT=3000
       - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     build:
       context: .
       dockerfile: app-backend/Dockerfile.backend
