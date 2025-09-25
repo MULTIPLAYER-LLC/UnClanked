@@ -16,10 +16,24 @@ services:
     hostname: tmux.io
     environment:
       - API_PORT=3000
-      - OLLAMA_HOST=http://host.docker.internal:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - OLLAMA_HOST=http://ollama:11434
     build:
       context: .
       dockerfile: app-backend/Dockerfile.backend
     restart: unless-stopped
+    depends_on: [ollama]
+
+  ollama:
+    image: ollama/ollama:0.12.1
+    environment:
+      - OLLAMA_DEBUG=2
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
