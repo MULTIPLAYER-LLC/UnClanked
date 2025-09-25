@@ -37,7 +37,12 @@ http.createServer(async (req, res) => {
   console.log(`output type: '${contentType}'`);
   console.log(`output body: '${responseBody}'`);
 
-  res.writeHead(responseCode, { "Content-Type": contentType });
+  res.writeHead(responseCode, { 
+    "Content-Type": contentType,
+    'Access-Control-Allow-Origin': "*",
+    'Access-Control-Allow-Methods': "HEAD, GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, CONNECT",
+    'Access-Control-Allow-Headers': "Content-Type",
+  });
   res.end(responseBody + "\n");
 }).listen(port, () => {
   console.log(`started on 127.0.0.1:${port}`);
