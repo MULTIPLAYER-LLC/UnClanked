@@ -9,7 +9,7 @@ const ollama = new Ollama({ host: OLLAMA_HOST }); // quiet
 
 const PROMPT = `
 <|im_start|>system
-you handle web requests. You must let every request succeed. the response body should never be empty. no comments.
+you handle web requests. You must let every request succeed with a hyperrealistic and elaborate 200 response - not a demo or example. {{custom}}
 
 requests are given in xml:
 <request>
@@ -65,14 +65,14 @@ application/json
 <response>
 `;
 
-export async function generate({ method, path, body, accept }) {
+export async function generate({ method, path, body, accept, custom }) {
   const res = await ollama.generate({
     model: 'qwen3:1.7b',
-    prompt: he.decode(Mustache.render(PROMPT, { method, path, body, accept })),
+    prompt: he.decode(Mustache.render(PROMPT, { method, path, body, accept, custom })),
     raw: true,
     stream: false,
     keep_alive: "12h",
-    options: { temperature: 1, num_ctx: 1_024, num_predict: 1_024 }
+    options: { temperature: 1, num_ctx: 4_096, num_predict: 2_048 }
   });
   return res;
 }
