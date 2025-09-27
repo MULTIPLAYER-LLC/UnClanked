@@ -3,9 +3,14 @@ import os
 import argparse
 import torch
 import logging
+import re
 from src.stable_diffusion_sd15 import StableDiffusionSD15
 from src.stable_diffusion_sdxl import StableDiffusionSDXL
 from pathvalidate import sanitize_filename
+
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from PIL import Image, ImageDraw
+import io
 
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -205,12 +210,35 @@ def main():
         sorted_files = sorted(files, key=lambda x: int(x.split('-')[1]))
         sequence_number = int(sorted_files[-1].split('-')[1])
 
-    image_generator = artspew.create_generator(args.prompt)
-    for image in image_generator:
-        sequence_number += 1
-        safe_prompt = sanitize_filename(image.prompt_text)
-        image.save(f"spew/{image.filename_prefix}{sequence_number:09d}-{safe_prompt}.jpg")
+    print("before created image generator")
 
+    class ImageHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+
+            path = self.path
+            cleaned_path = re.sub(r'[^a-zA-Z0-9]', ' ', path)
+            cleaned_path = re.sub(r'\s+', ' ', cleaned_path).strip()
+
+            # Create a simple PIL image (you can modify this part)
+            image_generator = artspew.create_generator(cleaned_path)
+            img = next(image_generator).image
+
+            # Convert PIL image to bytes
+            img_buffer = io.BytesIO()
+            img.save(img_buffer, format='PNG')
+            img_bytes = img_buffer.getvalue()
+
+            # Send HTTP response
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/png')
+            self.send_header('Content-Length', str(len(img_bytes)))
+            self.end_headers()
+            self.wfile.write(img_bytes)
+
+    next(artspew.create_generator("init")) # to load the model
+    server = HTTPServer(('0.0.0.0', 3100), ImageHandler)
+    print("Server running on http://localhost:3100")
+    server.serve_forever()
 
 if __name__ == "__main__":
     main()

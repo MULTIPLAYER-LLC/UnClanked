@@ -138,8 +138,9 @@ class StableDiffusionBase:
         if len(kwargs) > 0:
             raise ValueError(f"Unknown arguments: {kwargs}")
 
-        if seed is None:
-            seed = random.randint(0, 2147483647)
+        # STOLEN
+        # if seed is None:
+        seed = random.randint(0, 2147483647)
 
         torch.manual_seed(seed)
 
