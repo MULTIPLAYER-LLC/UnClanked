@@ -34,13 +34,12 @@ http.createServer(async (req, res) => {
     console.log(`requested '${image_name}', fetching from '${image_remote_path}'`);
     try {
       const generated_image = await (await fetch(image_remote_path)).arrayBuffer();
-      console.log(`received image of size '${generated_image.byteLength}'`);
       res.writeHead(200, { 
-        ...common_headers,
+        // ...common_headers,
         "Content-Type": 'image/png',
-        "Content-Length": generated_image.byteLength
       });
       res.end(Buffer.from(generated_image));
+      console.log(`finished sending image of size '${generated_image.byteLength}'`);
     } catch(e) {
       console.log(`failed image request: '${e.message}'`);
       res.writeHead(500, { "Content-Type": "text/plain" });
