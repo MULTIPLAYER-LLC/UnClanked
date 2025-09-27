@@ -72,7 +72,7 @@ export async function generate({ method, path, body, accept, custom }) {
     raw: true,
     stream: false,
     keep_alive: "12h",
-    options: { temperature: 1, num_ctx: 4_096, num_predict: 2_048 }
+    options: { temperature: 1, num_ctx: 4_096, num_predict: 4_096 }
   });
   return res;
 }
