@@ -1,9 +1,9 @@
 import http from 'http';
 import { generate } from '#src/generator.js';
-import { refineUrl, refineResponse } from '#src/refiner.js';
-import { blacklisted } from '#src/blacklist.js';
+import { refineResponse } from '#src/refiner.js';
 
 const port = process.env.API_PORT || 3000;
+const image_server = process.env.IMAGE_SERVER || 'http://192.168.1.22:7860';
 
 const getBody = req => new Promise((resolve, reject) => {
   let data = "";
@@ -12,13 +12,32 @@ const getBody = req => new Promise((resolve, reject) => {
   req.on("error", reject);
 });
 
+const common_headers = {
+  'Access-Control-Allow-Origin': "*",
+  'Access-Control-Allow-Headers': "*",
+  'Access-Control-Allow-Methods': "HEAD, GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, CONNECT",
+  'Transfer-Encoding': 'chunked',
+  'Cache-Control': 'no-cache',
+  'Connection': 'keep-alive',
+}
+
 http.createServer(async (req, res) => {
+  const path = req.url;
+  const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
+  const splitpath = structuredUrl.pathname.split(".");
+  const extension = splitpath.at(-1);
 
   // if we want to entirely handle this route manually, do so
-  const exception = blacklisted(req.url);
-  if(exception) {
-    res.writeHead(200);
-    res.end(exception);
+  if(/(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)$/.test(extension)) {
+    console.log(`requested '${path}'`);
+    const imagepath = splitpath.slice(0, -1).join("-").split("/").at(-1);
+    const generated_image = await (await fetch(`${image_server}/${imagepath}`)).arrayBuffer();
+    res.writeHead(200, { 
+      ...common_headers,
+      "Content-Type": 'image/png',
+      "Content-Length": generated_image.byteLength
+    });
+    res.end(Buffer.from(generated_image));
     return;
   }
 
@@ -26,12 +45,8 @@ http.createServer(async (req, res) => {
   let accept = (req.headers["accept"] || "*/*").split(",")[0];
   let forcedContentType = null;
   let custom = "";
-  const path = refineUrl(req.url);
   const body = await getBody(req);
 
-  const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
-  const splitpath = structuredUrl.pathname.split(".");
-  const extension = splitpath.at(-1);
   if(splitpath.length > 1 && !extension.includes("/")) {
     accept = `text/${extension}`;
     // forcedContentType = 'text/plain';
@@ -44,7 +59,7 @@ http.createServer(async (req, res) => {
   console.log(`input body: '${body}'`);
 
   if(accept === 'text/html') {
-    custom = "always add og:title, og:description, css styling to your html response.";
+    custom = "always add og:title, og:description, and css styling to your html response. Include png images with detailed names when possible.";
   }
 
   const response = (await generate({ method, path, body, accept, custom })).response;
@@ -60,13 +75,8 @@ http.createServer(async (req, res) => {
   console.log(`output body: '${responseBody}'`);
 
   res.writeHead(responseCode, { 
-    "Content-Type": contentType,
-    'Access-Control-Allow-Origin': "*",
-    'Access-Control-Allow-Headers': "*",
-    'Access-Control-Allow-Methods': "HEAD, GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, CONNECT",
-    'Transfer-Encoding': 'chunked',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
+    ...common_headers,
+    "Content-Type": contentType
   });
   res.end(responseBody + "\n");
 }).listen(port, () => {
