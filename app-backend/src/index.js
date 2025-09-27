@@ -5,6 +5,13 @@ import { blacklisted } from '#src/blacklist.js';
 
 const port = process.env.API_PORT || 3000;
 
+const getBody = req => new Promise((resolve, reject) => {
+  let data = "";
+  req.on("data", chunk => (data += chunk));
+  req.on("end", () => resolve(data));
+  req.on("error", reject);
+});
+
 http.createServer(async (req, res) => {
 
   // if we want to entirely handle this route manually, do so
@@ -20,7 +27,7 @@ http.createServer(async (req, res) => {
   let forcedContentType = null;
   let custom = "";
   const path = refineUrl(req.url);
-  const body = req.body || ""; // TODO fix!
+  const body = await getBody(req);
 
   const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
   const splitpath = structuredUrl.pathname.split(".");
