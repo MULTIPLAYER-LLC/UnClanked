@@ -205,7 +205,7 @@ def main():
         def do_GET(self):
 
             path = self.path
-            cleaned_path = re.sub(r'[^a-zA-Z0-9]', ' ', path)
+            cleaned_path = re.sub(r'[^a-zA-Z]', ' ', path)
             cleaned_path = re.sub(r'\s+', ' ', cleaned_path).strip()
 
             # Create a simple PIL image (you can modify this part)

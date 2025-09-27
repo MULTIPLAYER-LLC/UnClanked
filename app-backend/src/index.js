@@ -5,13 +5,6 @@ import { refineResponse } from '#src/refiner.js';
 const port = process.env.API_PORT || 3000;
 const image_server = process.env.IMAGE_HOST || 'http://192.168.1.22:7860';
 
-const getBody = req => new Promise((resolve, reject) => {
-  let data = "";
-  req.on("data", chunk => (data += chunk));
-  req.on("end", () => resolve(data));
-  req.on("error", reject);
-});
-
 const common_headers = {
   'Access-Control-Allow-Origin': "*",
   'Access-Control-Allow-Headers': "*",
@@ -21,30 +14,51 @@ const common_headers = {
   'Connection': 'keep-alive',
 }
 
+const getBody = req => new Promise((resolve, reject) => {
+  let data = "";
+  req.on("data", chunk => (data += chunk));
+  req.on("end", () => resolve(data));
+  req.on("error", reject);
+});
+
+const handleAsImage = async (res, image_path) => {
+  try {
+    const generated_image = await (await fetch(image_path)).arrayBuffer();
+    res.writeHead(200, { 
+      ...common_headers,
+      "Content-Type": 'image/png',
+    });
+    res.end(Buffer.from(generated_image));
+    console.log(`finished sending image of size '${generated_image.byteLength}'`);
+  } catch(e) {
+    console.log(`failed image request: '${e.message}'`);
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    res.end("Internal Server Error");
+  }
+  return;
+};
+
 http.createServer(async (req, res) => {
   const path = req.url;
   const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
   const splitpath = structuredUrl.pathname.split(".");
   const extension = splitpath.at(-1);
 
-  // if we want to entirely handle this route manually, do so
+  if(/.*\/[0-9]+x[0-9]+\?.+=.+$/.test(path)) {
+    console.log("this is an image (1), handling it as such...");
+    const image_name = path.split("=").at(-1);
+    const image_remote_path = `${image_server}/${image_name}`;
+    console.log(`requested '${path}', fetching from '${image_remote_path}'`);
+    handleAsImage(res, image_remote_path);
+    return;
+  }
+
   if(/(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)$/.test(extension)) {
+    console.log("this is an image (2), handling it as such...");
     const image_name = splitpath.slice(0, -1).join("-").split("/").at(-1);
     const image_remote_path = `${image_server}/${image_name}`;
-    console.log(`requested '${image_name}', fetching from '${image_remote_path}'`);
-    try {
-      const generated_image = await (await fetch(image_remote_path)).arrayBuffer();
-      res.writeHead(200, { 
-        ...common_headers,
-        "Content-Type": 'image/png',
-      });
-      res.end(Buffer.from(generated_image));
-      console.log(`finished sending image of size '${generated_image.byteLength}'`);
-    } catch(e) {
-      console.log(`failed image request: '${e.message}'`);
-      res.writeHead(500, { "Content-Type": "text/plain" });
-      res.end("Internal Server Error");
-    }
+    console.log(`requested '${path}', fetching from '${image_remote_path}'`);
+    handleAsImage(res, image_remote_path);
     return;
   }
 
@@ -66,7 +80,7 @@ http.createServer(async (req, res) => {
   console.log(`input body: '${body}'`);
 
   if(accept === 'text/html') {
-    custom = "always add og:title, og:description, and css styling to your html response. Include png images with detailed names when possible.";
+    custom = "always add og:title, og:description, og:image, and css styling to your html response. Include detailed png images as needed.";
   }
 
   const response = (await generate({ method, path, body, accept, custom })).response;
