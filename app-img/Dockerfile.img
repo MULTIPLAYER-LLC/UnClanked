@@ -1,0 +1,13 @@
+FROM python:3.10.6-buster
+
+USER root
+
+WORKDIR /srv/app-img
+
+COPY app-img/requirements.txt app-img/start.sh /srv/app-img/
+
+RUN pip install -r requirements.txt
+
+COPY app-img/src/ /srv/app-img/src/
+
+CMD ["sh", "start.sh"]

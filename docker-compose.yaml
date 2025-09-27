@@ -11,6 +11,7 @@ services:
       - ./app-proxy/ssl:/etc/nginx/ssl:ro
     restart: unless-stopped
     depends_on: [unclanked]
+
   unclanked:
     image: unclanked:latest
     hostname: tmux.io
@@ -37,3 +38,21 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+
+  img:
+    image: unclanked-img:latest
+    build:
+      context: .
+      dockerfile: app-img/Dockerfile.img
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./data/img/__pycache__:/srv/app-img/src/src/__pycache__
+    restart: unless-stopped
+    stop_signal: SIGKILL
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+

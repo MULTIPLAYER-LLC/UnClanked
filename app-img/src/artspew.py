@@ -183,7 +183,7 @@ def main():
 
     # Configure the root logger
     logging.basicConfig(level=log_level, format='%(message)s')
-
+    print("creating ArtSpew instance...")
     artspew = ArtSpew(
         xl=args.xl,
         model_id=args.model_id,
@@ -199,18 +199,7 @@ def main():
         guidance_scale=args.guidance,
         torch_compile=args.torch_compile
     )
-
-    sequence_number = -1
-    if not os.path.exists('spew'):
-        os.makedirs('spew')
-
-    files = [entry.name for entry in os.scandir('spew') if entry.name.startswith(artspew.get_filename_prefix())]
-
-    if files:
-        sorted_files = sorted(files, key=lambda x: int(x.split('-')[1]))
-        sequence_number = int(sorted_files[-1].split('-')[1])
-
-    print("before created image generator")
+    print("created ArtSpew instance")
 
     class ImageHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -235,9 +224,11 @@ def main():
             self.end_headers()
             self.wfile.write(img_bytes)
 
+    print("generating initial image for model load...")
     next(artspew.create_generator("init")) # to load the model
-    server = HTTPServer(('0.0.0.0', 3100), ImageHandler)
-    print("Server running on http://localhost:3100")
+    print("finished generating image / loading model")
+    server = HTTPServer(('0.0.0.0', 7860), ImageHandler)
+    print("Server running on http://localhost:7860")
     server.serve_forever()
 
 if __name__ == "__main__":
