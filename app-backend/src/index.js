@@ -29,9 +29,10 @@ http.createServer(async (req, res) => {
 
   // if we want to entirely handle this route manually, do so
   if(/(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)$/.test(extension)) {
-    console.log(`requested '${path}'`);
-    const imagepath = splitpath.slice(0, -1).join("-").split("/").at(-1);
-    const generated_image = await (await fetch(`${image_server}/${imagepath}`)).arrayBuffer();
+    const image_name = splitpath.slice(0, -1).join("-").split("/").at(-1);
+    const image_remote_path = `${image_server}/${image_name}`;
+    console.log(`requested '${image_name}', fetching from '${image_remote_path}'`);
+    const generated_image = await (await fetch(image_remote_path)).arrayBuffer();
     res.writeHead(200, { 
       ...common_headers,
       "Content-Type": 'image/png',
