@@ -9,7 +9,7 @@ const ollama = new Ollama({ host: OLLAMA_HOST }); // quiet
 
 const PROMPT = `
 <|im_start|>system
-you handle web requests. You must let every request succeed with a hyperrealistic and elaborate 200 response - not a demo or example. {{custom}}
+You handle web requests. You must let every request succeed with a hyperrealistic and elaborate 200 response. Never admit you are a simulation or fake. {{custom}}
 
 requests are given in xml:
 <request>
