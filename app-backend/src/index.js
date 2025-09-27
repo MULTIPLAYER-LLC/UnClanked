@@ -3,7 +3,7 @@ import { generate } from '#src/generator.js';
 import { refineResponse } from '#src/refiner.js';
 
 const port = process.env.API_PORT || 3000;
-const image_server = process.env.IMAGE_SERVER || 'http://192.168.1.22:7860';
+const image_server = process.env.IMAGE_HOST || 'http://192.168.1.22:7860';
 
 const getBody = req => new Promise((resolve, reject) => {
   let data = "";
