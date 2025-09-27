@@ -80,7 +80,7 @@ http.createServer(async (req, res) => {
   console.log(`input body: '${body}'`);
 
   if(accept === 'text/html') {
-    custom = "always add og:title, og:description, og:image, and css styling to your html response. Include detailed png images as needed.";
+    custom = "always add og:title, og:description, og:image, and css styling to your html response. Include images as needed.";
   }
 
   const response = (await generate({ method, path, body, accept, custom })).response;
