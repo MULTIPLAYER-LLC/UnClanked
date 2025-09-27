@@ -18,6 +18,7 @@ services:
     environment:
       - API_PORT=3000
       - OLLAMA_HOST=http://ollama:11434
+      - IMAGE_HOST=http://img:7860
     build:
       context: .
       dockerfile: app-backend/Dockerfile.backend
