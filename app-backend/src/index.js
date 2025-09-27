@@ -35,7 +35,7 @@ http.createServer(async (req, res) => {
     try {
       const generated_image = await (await fetch(image_remote_path)).arrayBuffer();
       res.writeHead(200, { 
-        // ...common_headers,
+        ...common_headers,
         "Content-Type": 'image/png',
       });
       res.end(Buffer.from(generated_image));
