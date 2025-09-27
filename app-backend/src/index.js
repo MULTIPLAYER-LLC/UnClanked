@@ -53,7 +53,8 @@ http.createServer(async (req, res) => {
     return;
   }
 
-  if(/\.(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)$/.test(extension)) {
+  console.log(`url '${path}', extension '${extension}'`);
+  if(splitpath.length > 1 && /\.(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)$/.test(extension)) {
     console.log("this is an image (2), handling it as such...");
     const image_name = splitpath.slice(0, -1).join("-").split("/").at(-1);
     const image_remote_path = `${image_server}/${image_name}`;
