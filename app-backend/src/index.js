@@ -1,5 +1,5 @@
 import http from 'http';
-import { generate } from '#src/generator.js';
+import { generate } from '#src/generator-openai.js';
 import { refineResponse } from '#src/refiner.js';
 
 const port = process.env.API_PORT || 3000;
@@ -81,10 +81,20 @@ http.createServer(async (req, res) => {
   console.log(`input body: '${body}'`);
 
   if(accept === 'text/html') {
-    custom = "always add meta og:title, og:description, og:image, as well as javascript and css styling to your html response. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\").";
+    custom = "always add meta og:title, og:description, og:image, as well as javascript and lots of css styling to your html response. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\").";
   }
 
-  const response = (await generate({ method, path, body, accept, custom })).response;
+  let response;
+  try {
+    response = await generate({ method, path, body, accept, custom });
+  } catch(e) {
+    res.writeHead(500, {
+      ...common_headers,
+      "Content-Type": "text/plain"
+    });
+    res.end("womp womp");
+    return;
+  }
   
   const filteredResponse = refineResponse(response);
   const responseCode = filteredResponse.match(/<response-code>(.*?)<\/response-code>/s)?.[1]?.trim() || 200;
@@ -95,6 +105,9 @@ http.createServer(async (req, res) => {
   console.log(`output code: '${responseCode}'`);
   console.log(`output type: '${contentType}'`);
   console.log(`output body: '${responseBody}'`);
+  if(!responseBody) {
+    console.log(`raw output: '${response}'`);
+  }
 
   res.writeHead(responseCode, { 
     ...common_headers,

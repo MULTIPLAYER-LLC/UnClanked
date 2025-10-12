@@ -1,9 +1,8 @@
 import Mustache from 'mustache';
 import he from 'he';
-import { Ollama } from 'ollama';
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://192.168.1.22:11434';
-const ollama = new Ollama({ host: OLLAMA_HOST }); // quiet
+const OPENAI_HOST = process.env.OPENAI_HOST || 'http://192.168.1.22:11435';
+const MODEL_NAME = 'Orion-zhen/Qwen3-1.7B-AWQ';
 
 // for html pages, include only og meta tags in the head and a detailed body.
 
@@ -66,13 +65,22 @@ application/json
 `;
 
 export async function generate({ method, path, body, accept, custom }) {
-  const res = await ollama.generate({
-    model: 'qwen3:1.7b',
-    prompt: he.decode(Mustache.render(PROMPT, { method, path, body, accept, custom })),
-    raw: true,
-    stream: false,
-    keep_alive: "12h",
-    options: { temperature: 1, num_ctx: 4_096, num_predict: 4_096 }
+  const res = await fetch(`${OPENAI_HOST}/v1/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: MODEL_NAME,
+      prompt: he.decode(Mustache.render(PROMPT, { method, path, body, accept, custom })),
+      stop: ['<|im_start|>', '<|im_end|>'],
+      max_tokens: 4096,
+      temperature: 1.1,
+      repetition_penalty: 1.1,
+      top_k: 20,
+      top_p: 0.95,
+    })
   });
-  return res.response;
+  const json = await res.json();
+  return json.choices[0].text;
 }
