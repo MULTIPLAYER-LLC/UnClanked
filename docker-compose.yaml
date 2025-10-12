@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: app-backend/Dockerfile.backend
     restart: unless-stopped
-    depends_on: [ollama]
+    depends_on: [vllm]
 
   # ollama:
   #   image: ollama/ollama:0.12.1
@@ -49,10 +49,15 @@ services:
     volumes:
       - ./data/vllm:/root/.cache
     command: >
-      --model Orion-zhen/Qwen3-1.7B-AWQ
+      --model=Orion-zhen/Qwen3-1.7B-AWQ
       --max_model_len=4596
-      --gpu-memory-utilization=0.35
-      --max-num-seqs=1
+      --gpu-memory-utilization=0.5
+      --quantization=awq_marlin
+      --dtype=half
+      --max-num-seqs=4
+      --enforce-eager
+      --enable-prefix-caching
+      --enable-chunked-prefill
     deploy:
       resources:
         reservations:
