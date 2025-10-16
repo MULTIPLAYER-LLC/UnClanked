@@ -1,11 +1,15 @@
 # UnClanked
+generate articles from nothing but a URL, in real-time
+
+deployed at https://unclanked.com
+
+### deployment
 I did not design this with the thought of other people running it, sorry
 
 You can probably still run it but this readme may not be super helpful in getting there
 
-### deployment
-
-build vllm image depending on what cuda version you have
+#### steps
+1. build vllm image depending on what cuda version you have
 ```
 DOCKER_BUILDKIT=1 docker build . \
      --target vllm-openai \
@@ -20,4 +24,4 @@ DOCKER_BUILDKIT=1 docker build . \
      --build-arg TARGETPLATFORM=linux/amd64
 ```
 
-`./bin/up.sh`
+2. `./bin/up.sh`

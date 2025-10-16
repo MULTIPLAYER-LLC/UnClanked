@@ -17,7 +17,7 @@ services:
     hostname: tmux.io
     environment:
       - API_PORT=3000
-      - OPENAI_HOST=http://vllm:11435
+      - OPENAI_HOST=http://vllm:8000
       - IMAGE_HOST=http://img:7860
     build:
       context: .
