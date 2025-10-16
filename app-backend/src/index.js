@@ -29,7 +29,6 @@ const handleAsImage = async (res, image_path) => {
       "Content-Type": 'image/png',
     });
     res.end(Buffer.from(generated_image));
-    console.log(`finished sending image of size '${generated_image.byteLength}'`);
   } catch(e) {
     console.log(`failed image request: '${e.message}'`);
     res.writeHead(500, { "Content-Type": "text/plain" });
@@ -81,7 +80,7 @@ http.createServer(async (req, res) => {
   console.log(`input body: '${body}'`);
 
   if(accept === 'text/html') {
-    custom = "always add meta og:title, og:description, og:image, as well as javascript and lots of css styling to your html response. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\").";
+    custom = "always add meta og:title, og:description, og:image, as well as lots of css styling to your html response. Use javascript as needed. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\") and all different.";
   }
 
   let response;

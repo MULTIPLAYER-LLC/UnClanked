@@ -17,13 +17,13 @@ services:
     hostname: tmux.io
     environment:
       - API_PORT=3000
-      - OLLAMA_HOST=http://ollama:11434
+      - OPENAI_HOST=http://vllm:11435
       - IMAGE_HOST=http://img:7860
     build:
       context: .
       dockerfile: app-backend/Dockerfile.backend
     restart: unless-stopped
-    depends_on: [vllm]
+    depends_on: [vllm, img]
 
   # ollama:
   #   image: ollama/ollama:0.12.1
