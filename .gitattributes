@@ -1,0 +1,3 @@
+# this tells git-crypt which files we want to encrypt
+
+/app-proxy/ssl/* filter=git-crypt diff=git-crypt
