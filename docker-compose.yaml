@@ -16,7 +16,7 @@ services:
     image: unclanked:latest
     hostname: tmux.io
     environment:
-      - API_PORT=3000
+      - API_PORT=3005
       - OPENAI_HOST=http://vllm:8000
       - IMAGE_HOST=http://img:7860
     build:

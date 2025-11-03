@@ -2,7 +2,7 @@ import http from 'http';
 import { generate } from '#src/generator-openai.js';
 import { refineResponse } from '#src/refiner.js';
 
-const port = process.env.API_PORT || 3000;
+const port = process.env.API_PORT || 3005;
 const image_server = process.env.IMAGE_HOST || 'http://192.168.1.22:7860';
 
 const common_headers = {
@@ -80,7 +80,7 @@ http.createServer(async (req, res) => {
   console.log(`input body: '${body}'`);
 
   if(accept === 'text/html') {
-    custom = "always add meta og:title, og:description, og:image, as well as lots of css styling to your html response. Use javascript as needed. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\") and all different.";
+    custom = "always add meta og:title, og:description, og:image, as well as javascript and lots of css styling to your html response. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\").";
   }
 
   let response;
