@@ -64,9 +64,9 @@ function route_to(req) {
   if(method !== "GET") { return 'api'; }
   if(accept.match(/^application\//)) { return 'api'; }
   if(accept.match(/^image\//)) { return 'img'; }
+  if(extension.match(/^(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)/)) { return 'img'; }
   if(accept.match(/^text\/plain/)) { return 'txt'; }
   if(accept.match(/^text\/html/)) { return 'html'; }
-  if(extension.match(/^(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)/)) { return 'img'; }
   if(extension === '' || extension.match(/^(html)|(php)/)) { return 'html'; }
   return 'txt';
 }
