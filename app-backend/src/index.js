@@ -109,6 +109,11 @@ http.createServer(async (req, res) => {
 });
 
 async function handle_txt(req, res) {
+  res.writeHead(200, { 
+    ...common_headers,
+    "Content-Type": "text/plain"
+  });
+
   let response;
   try {
     response = await generate_txt({ path: req.url });
@@ -123,15 +128,17 @@ async function handle_txt(req, res) {
 
   const filteredResponse = refineResponse(response);
   const responseBody = filteredResponse.match(/(.*?)<\/contents>/s)?.[1]?.trim() || "no dice...";
-
-  res.writeHead(200, { 
-    ...common_headers,
-    "Content-Type": "text/plain"
-  });
   res.end(responseBody + "\n");
 }
 
 async function handle_html(req, res) {
+
+  res.writeHead(200, { 
+    ...common_headers,
+    "Content-Type": "text/html"
+  });
+  res.write("<!DOCTYPE html>\n");
+
   let response;
   try {
     response = await generate_html({ path: req.url });
@@ -147,10 +154,6 @@ async function handle_html(req, res) {
   const filteredResponse = refineResponse(response);
   const responseBody = filteredResponse.match(/(.*?)<\/response>/s)?.[1]?.trim() || "no dice...";
 
-  res.writeHead(200, { 
-    ...common_headers,
-    "Content-Type": "text/html"
-  });
   res.end(responseBody + "\n");
 }
 
