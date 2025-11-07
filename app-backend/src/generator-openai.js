@@ -192,6 +192,6 @@ function track(type, params, data, timing) {
     fs.writeFileSync(fileName, fileContent, 'utf8');
     console.info(`logged llm io to '${fileName}' - ${fileContent.length}c ${(timing / 1000).toFixed(3)}s`);
   } else {
-    console.info(`llm io - ${fileContent.length}c ${(timing / 1000).toFixed(3)}s`);
+    console.info(`llm io - ${data.length}c ${(timing / 1000).toFixed(3)}s`);
   }
 }
