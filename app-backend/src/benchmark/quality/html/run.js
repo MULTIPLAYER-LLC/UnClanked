@@ -122,12 +122,12 @@ function hasOGMetaImage(text) {
 
 // html
 
-// const allResults = [];
-// for(let i = 0; i < 50; i++) {
-//   console.log(`run ${i+1}`);
-//   allResults.push(await evaluateHTML("http://127.0.0.1:3005/articles/top-5-superfoods"));
-// }
-// console.log(reduceResults(allResults));
+const allResults = [];
+for(let i = 0; i < 50; i++) {
+  console.log(`run ${i+1}`);
+  allResults.push(await evaluateHTML("http://127.0.0.1:3005/articles/top-5-superfoods"));
+}
+console.log(reduceResults(allResults));
 
 // txt
 
