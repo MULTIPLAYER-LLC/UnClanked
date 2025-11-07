@@ -1,5 +1,5 @@
 import http from 'http';
-import { generate } from '#src/generator-openai.js';
+import { generate_api, generate_txt, generate_html } from '#src/generator-openai.js';
 import { refineResponse } from '#src/refiner.js';
 
 const port = process.env.API_PORT || 3005;
@@ -37,55 +37,141 @@ const handleAsImage = async (res, image_path) => {
   return;
 };
 
+function blacklist(req, res) {
+  const path = new URL(req.url, `http://${req.headers.host}`).pathname;
+  if(path === "/favicon.ico") {
+    const referrer = req.headers["referer"];
+    const structuredUrl = new URL(referrer, `http://${req.headers.host}`);
+    const splitpath = structuredUrl.pathname.split(".");
+    let image_name = splitpath.slice(0, -1).join("-").split("/").at(-1);
+    const image_remote_path = `${image_server}/${image_name}-logo`;
+    console.log(`requested '${path}', fetching from '${image_remote_path}'`);
+    handleAsImage(res, image_remote_path);
+    return true;
+  }
+  return false;
+}
+
+// returns 'html', 'txt', 'api', 'img'
+function route_to(req) {
+  const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
+  const splitpath = structuredUrl.pathname.split(".");
+  let extension = splitpath.at(-1);
+  if(extension.length > 4) { extension = ""; }
+  const method = req.method || "GET";
+  let accept = (req.headers["accept"] || "*/*").split(",")[0];
+
+  if(method !== "GET") { return 'api'; }
+  if(accept.match(/^application\//)) { return 'api'; }
+  if(accept.match(/^image\//)) { return 'img'; }
+  if(accept.match(/^text\/plain/)) { return 'txt'; }
+  if(accept.match(/^text\/html/)) { return 'html'; }
+  if(extension.match(/^(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)/)) { return 'img'; }
+  if(extension === '' || extension.match(/^(html)|(php)/)) { return 'html'; }
+  return 'txt';
+}
+
 http.createServer(async (req, res) => {
+  if(blacklist(req, res)) { return; }
+
   const path = req.url;
   const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
   const splitpath = structuredUrl.pathname.split(".");
-  const extension = splitpath.at(-1);
+  const route_type = route_to(req);
+  console.log(`${req.method} '${req.url}' - evaluating as '${route_type}'`);
 
-  if(/.*\/[0-9]+x[0-9]+\?.+=.+$/.test(path)) {
-    console.log("this is an image (1), handling it as such...");
-    const image_name = path.split("=").at(-1);
-    const image_remote_path = `${image_server}/${image_name}`;
-    console.log(`requested '${path}', fetching from '${image_remote_path}'`);
-    handleAsImage(res, image_remote_path);
-    return;
-  }
-
-  console.log(`url '${path}', extension '${extension}'`);
-  if(splitpath.length > 1 && /(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)$/.test(extension)) {
-    console.log("this is an image (2), handling it as such...");
+  if(route_type === 'img') {
     const image_name = splitpath.slice(0, -1).join("-").split("/").at(-1);
     const image_remote_path = `${image_server}/${image_name}`;
     console.log(`requested '${path}', fetching from '${image_remote_path}'`);
     handleAsImage(res, image_remote_path);
     return;
   }
+  if(route_type === 'html') {
+    await handle_html(req, res);
+    return;
+  }
+  if(route_type === 'txt') {
+    await handle_txt(req, res);
+    return;
+  }
+  if(route_type === 'api') {
+    await handle_api(req, res);
+    return;
+  }
+  res.writeHead(500, {
+    ...common_headers,
+    "Content-Type": "text/plain"
+  });
+  res.end("womp womp");
+}).listen(port, () => {
+  console.log(`started on 127.0.0.1:${port}`);
+});
 
+async function handle_txt(req, res) {
+  let response;
+  try {
+    response = await generate_txt({ path: req.url });
+  } catch(e) {
+    res.writeHead(500, {
+      ...common_headers,
+      "Content-Type": "text/plain"
+    });
+    res.end("womp womp");
+    return;
+  }
+
+  const filteredResponse = refineResponse(response);
+  const responseBody = filteredResponse.match(/(.*?)<\/contents>/s)?.[1]?.trim() || "no dice...";
+
+  res.writeHead(200, { 
+    ...common_headers,
+    "Content-Type": "text/plain"
+  });
+  res.end(responseBody + "\n");
+}
+
+async function handle_html(req, res) {
+  let response;
+  try {
+    response = await generate_html({ path: req.url });
+  } catch(e) {
+    res.writeHead(500, {
+      ...common_headers,
+      "Content-Type": "text/plain"
+    });
+    res.end("womp womp");
+    return;
+  }
+
+  const filteredResponse = refineResponse(response);
+  const responseBody = filteredResponse.match(/(.*?)<\/response>/s)?.[1]?.trim() || "no dice...";
+
+  res.writeHead(200, { 
+    ...common_headers,
+    "Content-Type": "text/html"
+  });
+  res.end(responseBody + "\n");
+}
+
+async function handle_api(req, res) {
+  const path = req.url;
+  const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
+  const splitpath = structuredUrl.pathname.split(".");
+  let extension = splitpath.at(-1);
+  if(extension.length > 4) { extension = ""; }
   const method = req.method || "GET";
   let accept = (req.headers["accept"] || "*/*").split(",")[0];
   let forcedContentType = null;
-  let custom = "";
   const body = await getBody(req);
 
   if(splitpath.length > 1 && !extension.includes("/")) {
     accept = `text/${extension}`;
-    // forcedContentType = 'text/plain';
   }
-
-  console.log("\n\n\n");
-  console.log(`input method: '${method}'`);
-  console.log(`input accepts: '${accept}'`);
-  console.log(`input path: '${path}'`);
-  console.log(`input body: '${body}'`);
-
-  if(accept === 'text/html') {
-    custom = "always add meta og:title, og:description, og:image, as well as javascript and lots of css styling to your html response. If you include images, the filepaths should be extremely descriptive (example: src=\"/duck_swimming_in_lake.png\").";
-  }
-
+  
   let response;
   try {
-    response = await generate({ method, path, body, accept, custom });
+    response = await generate_api({ method, path, body, accept });
   } catch(e) {
     res.writeHead(500, {
       ...common_headers,
@@ -100,24 +186,20 @@ http.createServer(async (req, res) => {
   const contentType = forcedContentType || filteredResponse.match(/<content-type>(.*?)<\/content-type>/s)?.[1]?.trim() || "text/plain";
   const responseBody = filteredResponse.match(/<response-body>(.*?)<\/response(-body)?>/s)?.[1]?.trim() || "";
 
-  console.log();
-  console.log(`output code: '${responseCode}'`);
-  console.log(`output type: '${contentType}'`);
-  console.log(`output body: '${responseBody}'`);
-  if(!responseBody) {
-    console.log(`raw output: '${response}'`);
-  }
+  // console.log();
+  // console.log(`output code: '${responseCode}'`);
+  // console.log(`output type: '${contentType}'`);
+  // console.log(`output body: '${responseBody}'`);
+  // if(!responseBody) {
+  //   console.log(`raw output: '${response}'`);
+  // }
 
   res.writeHead(responseCode, { 
     ...common_headers,
     "Content-Type": contentType
   });
   res.end(responseBody + "\n");
-}).listen(port, () => {
-  console.log(`started on 127.0.0.1:${port}`);
-});
-
-
+}
 
 // const server = http.createServer(async (req, res) => {
 //   res.writeHead(200, {
