@@ -49,6 +49,14 @@ function blacklist(req, res) {
     handleAsImage(res, image_remote_path);
     return true;
   }
+  if(path === "/robots.txt") {
+    res.writeHead(200, { 
+      ...common_headers,
+      "Content-Type": "text/plain"
+    });
+    res.end("User-agent: *\nAllow: /\n");
+    return true;
+  }
   return false;
 }
 
