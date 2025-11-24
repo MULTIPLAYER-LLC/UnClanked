@@ -76,7 +76,7 @@ function route_to(req) {
   if(extension.match(/^(html)|(php)/)) { return 'html'; }
   if(extension.match(/^(json)/)) { return 'api'; }
   if(extension.match(/^[a-z0-9]{1,4}$/)) { return 'txt'; }
-  if(structuredUrl.pathname.match(/^\/api\//)) { return 'api'; }
+  if(structuredUrl.pathname.match(/^\/api(\/.+)?$/)) { return 'api'; }
   if(accept.match(/^text\/plain/)) { return 'txt'; }
   if(accept.match(/^text\/html/)) { return 'html'; }
   if(extension === '' || extension.match(/^(html)|(php)/)) { return 'html'; }
