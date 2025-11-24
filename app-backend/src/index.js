@@ -65,6 +65,8 @@ function route_to(req) {
   if(accept.match(/^application\//)) { return 'api'; }
   if(accept.match(/^image\//)) { return 'img'; }
   if(extension.match(/^(png)|(jpg)|(jpeg)|(ico)|(gif)|(tiff)|(svg)|(webp)|(avif)|(img)/)) { return 'img'; }
+  if(extension.match(/^(html)|(php)/)) { return 'html'; }
+  if(extension.match(/^[a-z0-9]{1,4}$/)) { return 'txt'; }
   if(accept.match(/^text\/plain/)) { return 'txt'; }
   if(accept.match(/^text\/html/)) { return 'html'; }
   if(extension === '' || extension.match(/^(html)|(php)/)) { return 'html'; }
