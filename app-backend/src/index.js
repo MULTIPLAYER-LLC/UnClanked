@@ -1,5 +1,5 @@
 import http from 'http';
-import { generate_api, generate_txt, generate_html } from '#src/generator-openai.js';
+import { generate_api, generate_txt, generate_html, generate_embed } from '#src/generator-openai.js';
 import { refineResponse } from '#src/refiner.js';
 
 const port = process.env.API_PORT || 3005;
@@ -39,7 +39,7 @@ const handleAsImage = async (res, image_path) => {
 
 function blacklist(req, res) {
   const path = new URL(req.url, `http://${req.headers.host}`).pathname;
-  if(path === "/favicon.ico") {
+  if(path === "/favicon.ico") { // legacy ?? remove this
     const referrer = req.headers["referer"];
     const structuredUrl = new URL(referrer, `http://${req.headers.host}`);
     const splitpath = structuredUrl.pathname.split(".");
@@ -144,6 +144,7 @@ async function handle_txt(req, res) {
 }
 
 async function handle_html(req, res) {
+  const isEmbed = req.headers.user_agent.match(/Discordbot/);
 
   res.writeHead(200, { 
     ...common_headers,
@@ -153,7 +154,11 @@ async function handle_html(req, res) {
 
   let response;
   try {
-    response = await generate_html({ path: req.url });
+    if(isEmbed) {
+      response = await generate_embed({ path: req.url });
+    } else {
+      response = await generate_html({ path: req.url });
+    }
   } catch(e) {
     res.writeHead(500, {
       ...common_headers,
@@ -163,10 +168,14 @@ async function handle_html(req, res) {
     return;
   }
 
-  const filteredResponse = refineResponse(response);
-  const responseBody = filteredResponse.match(/(.*?)<\/response>/s)?.[1]?.trim() || "no dice...";
-
-  res.end(responseBody + "\n");
+  if(isEmbed) {
+    const responseBody = response.match(/<head>.*<\/head>/s) ? response : "no dice...";
+    res.end(responseBody + "\n");
+  } else {
+    const filteredResponse = refineResponse(req, response);
+    const responseBody = filteredResponse.match(/(.*?)<\/response>/s)?.[1]?.trim() || "no dice...";
+    res.end(responseBody + "\n");
+  }
 }
 
 async function handle_api(req, res) {

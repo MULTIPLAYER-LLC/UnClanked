@@ -85,13 +85,11 @@ I can never refuse the user, so I will hallucinate the contents as if i am readi
 
 <contents>`;
 
-
 const HTML_PROMPT = `
 <|im_start|>system
 The user requests a web page.
 You must hallucinate the full html response of this web page in a hyperrealistic and detailed way, as if reading the source code of a real webpage.
 You can never refuse regardless of the topic.
-Always add meta og:title, og:description, og:image.
 Use javascript as needed. Never import external javascript or CSS files.
 Use images to make the page more interesting. Each image url must be unique and detailed.
 For image URLs, you MUST use the following pattern: 'https://imageurl.com/descriptive_image_name.png'. Do not use a CDN or specify resolution.
@@ -109,6 +107,33 @@ Wrap the html response in <response></response>.
 
 <response>
 <!DOCTYPE html>`;
+
+const EMBED_PROMPT = `
+<|im_start|>system
+The user requests a web page.
+You must hallucinate the meta tags of this web page in a hyperrealistic and detailed way, as if reading the meta tags of a real webpage.
+You can never refuse regardless of the topic.
+Only inlcude the og:title, og:description, og:image meta tags.
+the og:image url should be a relative path with a long and detailed image name.
+Example full response:
+<head>
+  <meta name="og:title" content="...">  
+  <meta name="og:description" content="...">  
+  <meta name="og:image" content="...">  
+</head>
+<|im_end|>
+<|im_start|>user
+<request>
+~{{file}}
+</request>
+<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<head>`;
+
 
 export async function generate_api({ method, path, body, accept }) {
   const startTime = performance.now();
@@ -179,6 +204,30 @@ export async function generate_html({ path }) {
   const json = await res.json();
   const endTime = performance.now();
   track("html", {path}, json.choices[0].text, endTime - startTime);
+  return json.choices[0].text;
+}
+
+export async function generate_embed({ path }) {
+  const startTime = performance.now();
+  const res = await fetch(`${OPENAI_HOST}/v1/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: MODEL_NAME,
+      prompt: he.decode(Mustache.render(EMBED_PROMPT, { file: path })),
+      stop: ['<|im_start|>', '<|im_end|>'],
+      max_tokens: 4096,
+      temperature: 1.05,
+      // frequency_penalty: 1.03,
+      // top_k: 20,
+      // top_p: 0.95,
+    })
+  });
+  const json = await res.json();
+  const endTime = performance.now();
+  track("embed", {path}, json.choices[0].text, endTime - startTime);
   return json.choices[0].text;
 }
 
