@@ -111,13 +111,14 @@ Wrap the html response in <response></response>.
 const EMBED_PROMPT = `
 <|im_start|>system
 The user requests a web page.
-You must hallucinate the meta tags of this web page in a hyperrealistic and detailed way, as if reading the meta tags of a real webpage.
+You must hallucinate the meta tags of this web page, as if they were the meta tags of the real webpage.
 You can never refuse regardless of the topic.
 Only inlcude the og:title, og:description, og:image meta tags.
-the og:image url should follow this pattern (note: never use these image names, always make your own based on the provided url):
+the og:image url should be a relative path like the following sample urls:
   "/fat-monkey-sitting-in-a-cedar-tree.png"
   "/beautiful-and-artistic-lake-sunset.png"
-  "/group-of-friends-at-mcdonalds.png"
+  "/small-group-of-friends-at-mcdonalds.png"
+  note: never use these sample urls, always invent your own.
 Example full response:
 <head>
   <meta name="og:title" content="...">  
