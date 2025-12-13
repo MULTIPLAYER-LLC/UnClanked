@@ -144,7 +144,7 @@ async function handle_txt(req, res) {
 }
 
 async function handle_html(req, res) {
-  const isEmbed = !!(req.headers['user-agent']?.match(/Discordbot/));
+  const isEmbed = !!(req.headers['user-agent']?.match(/(Discordbot|Slackbot-LinkExpanding)/));
   console.log(`${req.method} '${req.url}' - for embedding only? '${isEmbed}'`);
 
   res.writeHead(200, { 
