@@ -25,21 +25,6 @@ services:
     restart: unless-stopped
     depends_on: [vllm, img]
 
-  # ollama:
-  #   image: ollama/ollama:0.12.1
-  #   environment:
-  #     - OLLAMA_DEBUG=2
-  #   ports:
-  #     - "11434:11434"
-  #   volumes:
-  #     - ./data/ollama:/root/.ollama
-  #   restart: unless-stopped
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - capabilities: [gpu]
-
   vllm:
     image: tmux.io/vllm-openai:lb-10_5_2025
     restart: unless-stopped
@@ -51,7 +36,7 @@ services:
     command: >
       --model=Orion-zhen/Qwen3-1.7B-AWQ
       --max_model_len=4596
-      --gpu-memory-utilization=0.5
+      --gpu-memory-utilization=0.2
       --quantization=awq_marlin
       --dtype=half
       --max-num-seqs=4
