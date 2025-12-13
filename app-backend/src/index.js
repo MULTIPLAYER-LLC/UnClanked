@@ -155,10 +155,12 @@ async function handle_html(req, res) {
 
   // get cache warm right away
   if(isEmbed && !req.headers['user-agent']?.includes('unclanked/cache-warmer')) {
-    const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
+    const structuredUrl = new URL(req.url, `https://unclanked.com`);
     fetch(structuredUrl, {
       headers: { 'User-Agent': 'unclanked/cache-warmer' },
-    }).catch(() => {});
+    })
+      .then(res => res.arrayBuffer())
+      .catch(() => {});
   }
 
   let response;
