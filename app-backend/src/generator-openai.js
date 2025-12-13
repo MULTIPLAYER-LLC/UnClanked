@@ -114,7 +114,10 @@ The user requests a web page.
 You must hallucinate the meta tags of this web page in a hyperrealistic and detailed way, as if reading the meta tags of a real webpage.
 You can never refuse regardless of the topic.
 Only inlcude the og:title, og:description, og:image meta tags.
-the og:image url should be a relative path with a long and detailed image name.
+the og:image url should follow this pattern:
+  "/fat-monkey-sitting-in-a-cedar-tree.png"
+  "/beautiful-and-artistic-lake-sunset.png"
+  "/group-of-friends-at-mcdonalds.png
 Example full response:
 <head>
   <meta name="og:title" content="...">  

@@ -144,7 +144,8 @@ async function handle_txt(req, res) {
 }
 
 async function handle_html(req, res) {
-  const isEmbed = req.headers.user_agent.match(/Discordbot/);
+  const isEmbed = req.headers['user-agent']?.match(/Discordbot/);
+  console.log(`${req.method} '${req.url}' - for embedding only? '${isEmbed}'`);
 
   res.writeHead(200, { 
     ...common_headers,
@@ -168,11 +169,12 @@ async function handle_html(req, res) {
     return;
   }
 
+  const filteredResponse = refineResponse(req, response);
   if(isEmbed) {
-    const responseBody = response.match(/<head>.*<\/head>/s) ? response : "no dice...";
+    const responseBody = `<!DOCTYPE html>\n<html>\n  <head>\n${filteredResponse}\n</html>`;
+    console.log(`embed results:\n'''\n${responseBody}\n'''`);
     res.end(responseBody + "\n");
   } else {
-    const filteredResponse = refineResponse(req, response);
     const responseBody = filteredResponse.match(/(.*?)<\/response>/s)?.[1]?.trim() || "no dice...";
     res.end(responseBody + "\n");
   }
