@@ -144,7 +144,7 @@ async function handle_txt(req, res) {
 }
 
 async function handle_html(req, res) {
-  const isEmbed = req.headers['user-agent']?.match(/Discordbot/);
+  const isEmbed = !!(req.headers['user-agent']?.match(/Discordbot/));
   console.log(`${req.method} '${req.url}' - for embedding only? '${isEmbed}'`);
 
   res.writeHead(200, { 
@@ -152,6 +152,14 @@ async function handle_html(req, res) {
     "Content-Type": "text/html"
   });
   res.write("<!DOCTYPE html>\n");
+
+  // get cache warm right away
+  if(isEmbed && !req.headers['user-agent']?.includes('unclanked/cache-warmer')) {
+    const structuredUrl = new URL(req.url, `http://${req.headers.host}`);
+    fetch(structuredUrl, {
+      headers: { 'User-Agent': 'unclanked/cache-warmer' },
+    }).catch(() => {});
+  }
 
   let response;
   try {
